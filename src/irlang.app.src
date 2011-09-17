@@ -1,0 +1,12 @@
+{application, irlang,
+ [
+  {description, ""},
+  {vsn, "1"},
+  {registered, []},
+  {applications, [
+                  kernel,
+                  stdlib
+                 ]},
+  {mod, { irlang_app, []}},
+  {env, []}
+ ]}.
