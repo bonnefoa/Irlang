@@ -1,12 +1,13 @@
 {application, irlang,
  [
-  {description, ""},
+  {description, "Irc bot in erlang"},
   {vsn, "1"},
   {registered, []},
   {applications, [
                   kernel,
+                  ssl,
                   stdlib
                  ]},
-  {mod, { irlang_app, []}},
+  {mod, { irlang_app, [1337, "localhost", "#geek", "irlang", "irlang"]}},
   {env, []}
  ]}.

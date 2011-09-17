@@ -6,3 +6,9 @@
    real_name
   }).
 
+-record(state, {
+  socket,
+  connected,
+  message 
+  }).
+
