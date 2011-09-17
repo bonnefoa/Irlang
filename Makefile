@@ -5,7 +5,9 @@ deps:
 compile:
 	    @$(REBAR) compile
 test:
-	    @$(REBAR) skip_deps=true eunit
+	    @$(REBAR) eunit
 clean:
 	    @$(REBAR) clean
 
+console:compile
+	erl -pa ebin
