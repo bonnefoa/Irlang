@@ -3,7 +3,7 @@
 %%% @doc The socket manager
 %%% @end
 %%%-------------------------------------------------------------------
--module(irlang_server).
+-module(irlang_client).
 -export([ start_link/1, start/1 ]).
 -export([
     init/1, handle_call/3,
