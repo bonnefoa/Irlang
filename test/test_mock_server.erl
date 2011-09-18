@@ -8,9 +8,9 @@ cleanup(_Pid) ->
   ok.
 
 test_mock_server() -> fun() -> 
-      %{ok, MockServer} = mock_server:start_link(#server_state{port=1338, loop={?MODULE, dummy_loop}}),
+      gen_server:call(mock_server, {change_loop, {?MODULE, dummy_loop} } ), 
       Params = [ {active, false} ],
-      {ok, Socket} = ssl:connect("localhost", 1338,  Params, 2000),
+      {ok, Socket} = ssl:connect("localhost", 1337,  Params, 2000),
       ssl:send(Socket, "bar"),
       {ok, "ok"}= ssl:recv(Socket, 0)
   end .
@@ -27,7 +27,6 @@ dummy_loop({Socket}) ->
 
 generator_test_() ->
   ssl:start(),
-  application:start(sasl),
   {setup,
     fun setup/0,
     fun cleanup/1,
