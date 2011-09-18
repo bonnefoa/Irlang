@@ -3,14 +3,25 @@
 
 setup() -> 
   ssl:start(),
-  {ok, _MockServer} = mock_server:start_link(#server_state{port=1337, loop={?MODULE, check_connection}}),
-  {ok, _Pid} = irlang_app:start(temporary, [1337, "localhost" ] ),
   %application:start(sasl),
+  %{ok, _MockServer} = mock_server:start_link(#server_state{port=1337, loop={?MODULE, check_connection}}),
+  %{ok, _Pid} = irlang_app:start(temporary, [1337, "localhost" ] ),
   ok.
 
 cleanup(_Pid) -> 
-  irlang_app:shutdown(),
+  %irlang_app:shutdown(),
   ok.
+
+run_servers(Loop, Action) -> 
+  process_flag(trap_exit, true), 
+  try 
+    {ok, MockServer} = mock_server:start_link(#server_state{port=1337, loop={?MODULE, Loop}}),
+    {ok, _Sup} = irlang_app:start(temporary, [1337, "localhost" ] ),
+    Action()
+    %exit(MockServer,"Pang")
+  catch 
+    _:_ -> ok
+  end .
 
 check_client_registering(Socket) -> 
   ?assertSasl({ok, "NICK GA\r\n"}, ssl:recv(Socket, 0)),
@@ -28,7 +39,10 @@ check_ping({Socket}) ->
   ssl:close(Socket).
 
 test_connect_server() -> fun() ->
-      "" = gen_fsm:sync_send_event(irlang_client, test_join())
+      run_servers(check_connection, 
+        fun() -> 
+            irlang_bot_server:join(test_record_join())
+        end)
   end.
 
 test_ping() -> fun() ->
@@ -42,8 +56,8 @@ generator_test_() ->
     fun setup/0,
     fun cleanup/1,
     [
-      test_connect_server(),
-      test_ping()
+      test_connect_server()
+      %test_ping()
     ]
   }.
 

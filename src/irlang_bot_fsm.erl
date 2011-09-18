@@ -3,13 +3,13 @@
 %%% @doc The irc client
 %%% @end
 %%%-------------------------------------------------------------------
--module(irlang_client).
+-module(irlang_bot_fsm).
 -include("irlang.hrl").
 
 -behaviour(gen_fsm).
 
 %% API
--export([start/1, start_link/1]).
+-export([start/0, start_link/0]).
 
 %% Supervisor callbacks
 -export([init/1, handle_event/3, 
@@ -17,90 +17,63 @@
     terminate/3, code_change/4]). 
 %% states
 -export([ 
-    idle/2, idle/3, 
-    connected/2, connected/3, 
-    ping/2, ping/3 
+    idle/3,
+    joined/3
   ]). 
 
 %% ===================================================================
 %% API functions
 %% ===================================================================
-start(Args) ->
-  gen_fsm:start(?MODULE, Args, []).
+start() ->
+  gen_fsm:start({local, ?MODULE}, ?MODULE, [], []).
 
-start_link(Args) ->
-  gen_fsm:start_link(?MODULE, Args, []).
+start_link() ->
+  gen_fsm:start_link({local, ?MODULE}, ?MODULE, [], []).
 
 %% ===================================================================
 %% Supervisor callbacks
 %% ===================================================================
 
-init(#irc_server{ port=Port, address=Address }) ->
-  Params = [ {active, true} ],
-  {ok, Socket} = ssl:connect(Address, Port,  Params, 2000),
-  ok = ssl:ssl_accept(Socket),
-  error_logger:warning_msg("INiit"),
-  {ok, idle, #state{ socket=Socket }}.
+init(_Args) ->
+  {ok, idle, #bot_server_state{ } }.
 
-idle(_Event, State=#state{socket=Socket}) -> 
-  receive
-    #join{ channel=Channel, nick=Nick, real_name=RealName } ->
-      ok = ssl:send(Socket, irlang_request:nick(Nick)),
-      ok = ssl:send(Socket, irlang_request:user(Nick, RealName)),
-      ok = ssl:send(Socket, irlang_request:join(Channel)),
-      {next_state, connected, State};
-    Msg -> 
-      io:format("received ~p", [ Msg ]),
-      {next_state, idle, State}
-  end .
+%% ===================================================================
+%% Idle state
+%% ===================================================================
 
-idle({join, Join=#join{ channel=Channel, nick=Nick, real_name=RealName }, _From, State=#state{socket=Socket}) -> 
-    ok = ssl:send(Socket, irlang_request:nick(Nick)),
-    ok = ssl:send(Socket, irlang_request:user(Nick, RealName)),
-    ok = ssl:send(Socket, irlang_request:join(Channel)),
-    {reply, "Connected", connected, State};
+idle({join, #join{ channel=Channel, nick=Nick, real_name=RealName } } , _From, State) -> 
+  Reply = {ok, [ irlang_request:nick(Nick), irlang_request:user(Nick, RealName), irlang_request:join(Channel) ]},
+  {reply, Reply, joined, State };
 
-idle(_Event, _From, State=#state{socket=Socket}) -> 
-  receive
-    #join{ channel=Channel, nick=Nick, real_name=RealName } ->
-      ok = ssl:send(Socket, irlang_request:nick(Nick)),
-      ok = ssl:send(Socket, irlang_request:user(Nick, RealName)),
-      ok = ssl:send(Socket, irlang_request:join(Channel)),
-      {reply, "Connected", connected, State};
-    Msg -> 
-      io:format("received ~p", [ Msg ]),
-      {reply, "Idiot", idle, State}
-  end .
+idle(Event, _From, State) -> 
+  unexpected_state(Event, idle, State).
 
-connected(_Event, State) -> 
-  receive
-    "PING " ++ Msg -> 
-      {next_state, ping, State#state{message=Msg} };
-    Msg -> 
-      io:format("received ~p", [ Msg ]),
-      {next_state, connected, State}
-  end .
+%% ===================================================================
+%% Joined state
+%% ===================================================================
 
-connected(Event, _From, State) -> 
-  unexpected(Event, idle),
-  {next_state, connected, State} .
+joined({disconnect, Reason}, _From, State) ->   
+  Reply = {ok, [ irlang_request:quit(Reason) ]},
+  {reply, Reply, joined, State };
 
-ping(_Event, State = #state{socket=Socket, message=Msg}) -> 
-  io:format("Ping received", Msg),
-  ok = ssl:send(Socket, irlang_request:pong(Msg)),
-  {next_state, idle, State} .
+joined({ping, Msg}, _From, State) ->   
+  Reply = {ok, [ irlang_request:pong(Msg) ]},
+  {reply, Reply, joined, State };
 
-ping(Event, _From, State) -> 
-  unexpected(Event, ping),
-  {next_state, idle, State} .
+joined(Event, _From, State) ->   
+  unexpected_state(Event, joined, State).
+
+%% ===================================================================
+%% 
+%% ===================================================================
 
 handle_event(Event, StateName, State) ->
   unexpected(Event, StateName),
   {next_state, idle, State}.
 
 handle_sync_event(Event, _From, StateName, State) ->
-  unexpected(Event, StateName),
-  {next_state, idle, State}.
+  Reply = io_lib:format("Got unexpected event ~p while state is ~p~n", [Event, StateName]),
+  {reply, Reply, StateName, State}.
 
 handle_info(Info, StateName, State) ->
   unexpected(Info, StateName),
@@ -117,4 +90,9 @@ unexpected(Msg, State) ->
   error_logger:warning_msg(
     io_lib:format("~p received unknown event ~p while in state ~p~n", [self(), Msg, State])
   ).
+
+unexpected_state(Event, StateName, State) ->
+  Reply = io_lib:format("Got unexpected event ~p while state is ~p~n", [Event, StateName]),
+  {reply, {ko, Reply}, StateName, State}.
+
 

@@ -10,7 +10,6 @@
   end
 ).
 
-test_server() -> #irc_server{ port=1337, address="midgard.adyxax.org" }.
-test_join() -> #join{ channel="#geek", nick="irlang", real_name="irlang" }.
-
+test_record_server() -> #irc_server{ port=1337, address="localhost" }.
+test_record_join() -> #join{ channel="#geek", nick="irlang", real_name="irlang" }.
 

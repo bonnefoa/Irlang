@@ -9,8 +9,12 @@
    real_name
   }).
 
--record(state, { 
-    socket 
-    , message
+-record(fsm_state, { 
+    message
   } ).
+
+-record(bot_server_state, { 
+    socket
+  } ).
+
 
