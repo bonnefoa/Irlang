@@ -50,7 +50,7 @@ accept_loop({Server, LSocket}) ->
   M:F({Socket})
   .
 
-accept(State = #server_state{lsocket=LSocket, loop = Loop}) ->
+accept(State = #server_state{lsocket=LSocket}) ->
   proc_lib:spawn_link(?MODULE, accept_loop, [{self(), LSocket}]),
   State.
 

@@ -14,8 +14,8 @@
 %% Application callbacks
 %% ===================================================================
 
-start(_StartType, [Port, Address, Channel, Nick, RealName] ) ->
-    Server=#server{ port=Port, address=Address, channel=Channel, nick=Nick, real_name=RealName },
+start(_StartType, [Port, Address] ) ->
+    Server=#irc_server{ port=Port, address=Address },
     irlang_sup:start_link([ Server ]).
 
 stop(_State) ->

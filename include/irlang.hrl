@@ -1,14 +1,16 @@
--record(server, {
+-record(irc_server, {
    port,
-   address,
+   address
+  }).
+
+-record(join, {
    channel,
    nick,
    real_name
   }).
 
--record(state, {
-  socket,
-  connected,
-  message 
-  }).
+-record(state, { 
+    socket 
+    , message
+  } ).
 
