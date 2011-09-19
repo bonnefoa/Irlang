@@ -42,12 +42,12 @@ handle_cast({accepted, _Pid}, State=#server_state{}) ->
   accept(State),
   {noreply, State}.
 
-accept_loop({Server, State = #server_state{lsocket=LSocket}}) ->
+accept_loop({Server, State = #server_state{lsocket=LSocket, pid=Pid}}) ->
   {ok, Socket} = ssl:transport_accept(LSocket),
   ok = ssl:ssl_accept(Socket),
   gen_server:cast(Server, {accepted, self()}),
   {M,F} = gen_server:call(Server, get_loop), 
-  M:F({Socket})
+  M:F({Socket, Pid})
   .
 
 accept(State) ->

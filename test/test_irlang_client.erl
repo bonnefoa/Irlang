@@ -3,7 +3,7 @@
 
 setup() -> 
   ssl:start(),
-  application:start(sasl),
+  %application:start(sasl),
   %{ok, _MockServer} = mock_server:start_link(#server_state{port=1337, loop={?MODULE, check_connection}}),
   %{ok, _Pid} = irlang_app:start(temporary, [1337, "localhost" ] ),
   ok.
@@ -13,33 +13,33 @@ cleanup(_Pid) ->
   %exit(whereis(mock_server),"Pang"),
   ok.
 
-run_servers(Loop, Action) -> 
+%run_servers(Loop, Action) -> 
 %  process_flag(trap_exit, true), 
 %  try 
     %{ok, _MockServer} = mock_server:start_link(#server_state{port=1337, loop={?MODULE, Loop}}),
     %{ok, _Sup} = irlang_app:start(temporary, [1337, "localhost" ] ),
-    Action().
+    %Action().
     %exit(MockServer,"Pang")
 %  catch 
 %    _:_ -> ok
 %  end .
 %
 
-check_connection(Pid) -> fun({ Socket }) -> 
+check_connection({Socket, Pid}) -> 
       try
-        {ok, "NICK GA\r\n"} = ssl:recv(Socket, 0),
-        {ok, "USER GA 0 * :GA\r\n"} = ssl:recv(Socket, 0),
-        {ok, "JOIN #geek\r\n"} = ssl:recv(Socket, 0)
+        {ok, "NICK irlang\r\n"} = ssl:recv(Socket, 0, 500),
+        {ok, "USER irlang 0 * :irlang\r\n"} = ssl:recv(Socket, 0, 500),
+        {ok, "JOIN #geek\r\n"} = ssl:recv(Socket, 0, 500)
       catch
         _:Reason -> Pid ! Reason
       end,
       Pid ! ok,
-      ssl:close(Socket)
-  end.
+      ssl:close(Socket) .
 
 test_connect_server() -> fun() ->
-      {ok, _MockServer} = mock_server:start_link(#server_state{port=1337, loop={?MODULE, check_connection}}),
-      {ok, _Sup} = irlang_bot_server:start(#irc_server{port=1337, address="localhost"} ),
+      {ok, _MockServer} = mock_server:start_link(#server_state{port=1337, loop={?MODULE, check_connection }, pid=self()}),
+      {ok, _Sup} = irlang_sup:start_link(#irc_server{port=1337, address="localhost"}), 
+      %{ok, _Sup} = irlang_bot_server:start(#irc_server{port=1337, address="localhost"} ),
       ok = irlang_bot_server:join(test_record_join()),
       receive
         ok -> ok;

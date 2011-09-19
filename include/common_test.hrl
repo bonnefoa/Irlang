@@ -2,7 +2,7 @@
 -include("irlang.hrl").
 -compile(export_all).
 
--record( server_state, { lsocket, port, loop } ).
+-record( server_state, { lsocket, port, loop, pid} ).
 -define( assertSasl(Expected, Res), 
   case Expected =:= Res of
     true -> ok;

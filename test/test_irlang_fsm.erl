@@ -8,7 +8,7 @@ cleanup(_Pid) ->
   ok.
 
 run_fsm(Action) -> 
-  {ok, Pid} = irlang_bot_fsm:start(),
+  {ok, Pid} = irlang_bot_fsm:start(test_record_server()),
   Action(),
   exit(Pid,"Pang") .
 

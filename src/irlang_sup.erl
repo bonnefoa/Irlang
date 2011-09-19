@@ -23,9 +23,9 @@ start_link(StartArgs) ->
 %% Supervisor callbacks
 %% ===================================================================
 
-init([Server]) ->
+init(Server) ->
   RestartStrategy    = one_for_one,
-  MaxRestarts        = 10,
+  MaxRestarts        = 1,
   MaxTimeBetRestarts = 3600,
   SupFlags = {RestartStrategy, MaxRestarts, MaxTimeBetRestarts},
   ChildSpecs = [ 

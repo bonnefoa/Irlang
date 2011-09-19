@@ -10,6 +10,10 @@
   }).
 
 -record(bot_server_state, { 
+    loop_pid
+  } ).
+
+-record(bot_server_loop, { 
     socket
   } ).
 
