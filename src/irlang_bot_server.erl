@@ -70,7 +70,7 @@ code_change(_OldVsn, State, _Extra) -> {ok, State}.
 
 join(Join = #join{} ) -> 
   {ok, Res} = gen_fsm:sync_send_event(irlang_bot_fsm, {join, Join } ),
-  ok = gen_server:call(?MODULE, {request, Res}).
+  gen_server:call(?MODULE, {request, Res}).
   
 send_cmd(ListCommand, Socket) -> 
   lists:foreach( fun(Cmd) -> ok = ssl:send(Socket, Cmd) end , ListCommand).

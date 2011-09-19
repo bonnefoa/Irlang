@@ -42,7 +42,7 @@ handle_cast({accepted, _Pid}, State=#server_state{}) ->
   accept(State),
   {noreply, State}.
 
-accept_loop({Server, LSocket}) ->
+accept_loop({Server, State = #server_state{lsocket=LSocket}}) ->
   {ok, Socket} = ssl:transport_accept(LSocket),
   ok = ssl:ssl_accept(Socket),
   gen_server:cast(Server, {accepted, self()}),
@@ -50,8 +50,8 @@ accept_loop({Server, LSocket}) ->
   M:F({Socket})
   .
 
-accept(State = #server_state{lsocket=LSocket}) ->
-  proc_lib:spawn_link(?MODULE, accept_loop, [{self(), LSocket}]),
+accept(State) ->
+  proc_lib:spawn_link(?MODULE, accept_loop, [{self(), State}]),
   State.
 
 %% ===================================================================

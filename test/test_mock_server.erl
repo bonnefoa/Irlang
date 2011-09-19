@@ -12,7 +12,6 @@ run_mock(Action) ->
   Action(),
   exit(Pid,"Pang") .
 
-
 test_mock_server() -> fun() -> run_mock(fun fun_test_mock_server/0) end.
 
 fun_test_mock_server() -> 
