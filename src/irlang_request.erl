@@ -21,8 +21,8 @@ join(Channel)                  -> ?WRITE_CMD("JOIN ~s\r\n", [Channel]).
 private_message(User, Message) -> ?WRITE_CMD("PRIVMSG ~s ~s\r\n", [User, Message]).
 quit(Reason)                   -> ?WRITE_CMD("QUIT ~s\r\n", [Reason]).
 
-request_to_event(Request) -> 
-  case Request of 
+request_to_event(Request) ->
+  case Request of
     "PING " ++ Msg -> {ping, Msg}
   end.
 

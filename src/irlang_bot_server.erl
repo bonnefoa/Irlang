@@ -11,8 +11,8 @@
 % API
 -export([
     start/1, start_link/1
-    , join/1 
-    , init_listen/1 
+    , join/1
+    , init_listen/1
   ]).
 
 %% Supervisor callbacks
@@ -55,29 +55,29 @@ code_change(_OldVsn, State, _Extra) -> {ok, State}.
 %% Private functions
 %% ===================================================================
 
-join(Join = #join{} ) -> 
+join(Join = #join{} ) ->
   {ok, Res} = gen_fsm:sync_send_event(irlang_bot_fsm, {join, Join } ),
   gen_server:cast(?MODULE, {send, Res}).
-  
-send_cmd(ListCommand, Socket) -> 
+
+send_cmd(ListCommand, Socket) ->
   lists:foreach( fun(Cmd) -> ok = ssl:send(Socket, Cmd) end , ListCommand).
 
 %% ===================================================================
 %% Listen loop
 %% ===================================================================
 
-loop_listen(State = #bot_server_loop{socket=Socket}) -> 
+loop_listen(State = #bot_server_loop{socket=Socket}) ->
   ssl:setopts(Socket,[{active,true}]),
   receive
-    {tcp, Socket, Data} -> 
+    {tcp, Socket, Data} ->
       {ok, CmdList} = gen_fsm:sync_send_event(irlang_bot_fsm, irlang_request:request_to_event(Data) ),
       send_cmd(CmdList, Socket);
-    {send, CmdList} -> 
+    {send, CmdList} ->
       send_cmd(CmdList, Socket)
   end,
   loop_listen(State).
 
-init_listen(#irc_server{address=Address, port=Port}) -> 
+init_listen(#irc_server{address=Address, port=Port}) ->
   Params = [ {active, false} ],
   {ok, Socket} = ssl:connect(Address, Port,  Params, 2000),
   ok = ssl:ssl_accept(Socket),

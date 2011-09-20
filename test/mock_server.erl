@@ -24,9 +24,9 @@ start(State) ->
 %% Supervisor callbacks
 %% ===================================================================
 init(State = #server_state{port=Port} ) ->
-  Params = [ 
-    {reuseaddr, true} 
-    , {active, false} 
+  Params = [
+    {reuseaddr, true}
+    , {active, false}
     , {certfile,"/home/sora/git_repos/irlang/priv/certificate.pem"}
     , {keyfile, "/home/sora/git_repos/irlang/priv/key.pem"}
   ],
@@ -42,11 +42,11 @@ handle_cast({accepted, _Pid}, State=#server_state{}) ->
   accept(State),
   {noreply, State}.
 
-accept_loop({Server, State = #server_state{lsocket=LSocket, pid=Pid}}) ->
+accept_loop({Server, #server_state{lsocket=LSocket, pid=Pid}}) ->
   {ok, Socket} = ssl:transport_accept(LSocket),
   ok = ssl:ssl_accept(Socket),
   gen_server:cast(Server, {accepted, self()}),
-  {M,F} = gen_server:call(Server, get_loop), 
+  {M,F} = gen_server:call(Server, get_loop),
   M:F({Socket, Pid})
   .
 
@@ -57,6 +57,8 @@ accept(State) ->
 %% ===================================================================
 %% Change loop function on next call
 %% ===================================================================
+handle_call(stop, _From, _State) ->
+  {stop, quit};
 handle_call(get_loop, _From, State=#server_state{loop=Loop}) ->
   {reply, Loop, State};
 handle_call({change_loop, Loop}, _From, State=#server_state{}) ->

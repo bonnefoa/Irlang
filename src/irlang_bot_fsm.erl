@@ -12,14 +12,14 @@
 -export([start/0, start_link/0]).
 
 %% Supervisor callbacks
--export([init/1, handle_event/3, 
+-export([init/1, handle_event/3,
     handle_sync_event/4, handle_info/3,
-    terminate/3, code_change/4]). 
+    terminate/3, code_change/4]).
 %% states
--export([ 
+-export([
     idle/3,
     joined/3
-  ]). 
+  ]).
 
 %% ===================================================================
 %% API functions
@@ -41,39 +41,42 @@ init(_Args) ->
 %% Idle state
 %% ===================================================================
 
-idle({join, #join{ channel=Channel, nick=Nick, real_name=RealName } } , _From, State) -> 
+idle({join, #join{ channel=Channel, nick=Nick, real_name=RealName } } , _From, State) ->
   Reply = {ok, [ irlang_request:nick(Nick), irlang_request:user(Nick, RealName), irlang_request:join(Channel) ]},
   {reply, Reply, joined, State };
 
-idle(Event, _From, State) -> 
+idle(Event, _From, State) ->
   unexpected_state(Event, idle, State).
 
 %% ===================================================================
 %% Joined state
 %% ===================================================================
 
-joined({disconnect, Reason}, _From, State) ->   
+joined({disconnect, Reason}, _From, State) ->
   Reply = {ok, [ irlang_request:quit(Reason) ]},
   {reply, Reply, joined, State };
 
-joined({ping, Msg}, _From, State) ->   
+joined({ping, Msg}, _From, State) ->
   Reply = {ok, [ irlang_request:pong(Msg) ]},
   {reply, Reply, joined, State };
 
-joined(Event, _From, State) ->   
+joined(Event, _From, State) ->
   unexpected_state(Event, joined, State).
 
 %% ===================================================================
-%% 
+%%
 %% ===================================================================
 
 handle_event(Event, StateName, State) ->
   unexpected(Event, StateName),
   {next_state, idle, State}.
 
+handle_sync_event(stop, _From, _StateName, State) ->
+  {stop, quit, State};
+
 handle_sync_event(Event, _From, StateName, State) ->
-  Reply = io_lib:format("Got unexpected event ~p while state is ~p~n", [Event, StateName]),
-  {reply, Reply, StateName, State}.
+  error_logger:error_msg("Got unexpected event ~p while state is ~p~n", [Event, StateName]),
+  {reply, {ko, "Unexpected request"}, StateName, State}.
 
 handle_info(Info, StateName, State) ->
   unexpected(Info, StateName),
@@ -92,7 +95,6 @@ unexpected(Msg, State) ->
   ).
 
 unexpected_state(Event, StateName, State) ->
-  Reply = io_lib:format("Got unexpected event ~p while state is ~p~n", [Event, StateName]),
-  {reply, {ko, Reply}, StateName, State}.
-
+  error_logger:error_msg("Got unexpected event ~p while state is ~p~n", [Event, StateName]),
+  {reply, {ko, "Unexpected request"}, StateName, State}.
 

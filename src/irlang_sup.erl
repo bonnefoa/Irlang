@@ -28,10 +28,10 @@ init(Server) ->
   MaxRestarts        = 1,
   MaxTimeBetRestarts = 3600,
   SupFlags = {RestartStrategy, MaxRestarts, MaxTimeBetRestarts},
-  ChildSpecs = [ 
-    ?CHILD_ARGS(irlang_bot_server, worker, [Server]) 
-    , ?CHILD(irlang_bot_fsm, worker) 
-    
+  ChildSpecs = [
+    ?CHILD_ARGS(irlang_bot_server, worker, [Server])
+    , ?CHILD(irlang_bot_fsm, worker)
+
   ],
   {ok,{SupFlags, ChildSpecs}}.
 

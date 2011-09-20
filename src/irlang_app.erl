@@ -16,14 +16,14 @@
 
 start(_StartType, [Port, Address] ) ->
     Server=#irc_server{ port=Port, address=Address },
-    irlang_sup:start_link([ Server ]).
+    irlang_sup:start_link(Server).
 
 stop(_State) ->
     ok.
 
 %%--------------------------------------------------------------------
 %% @doc The starting point for the application
-%% @spec start() -> ok | {error, Reason} 
+%% @spec start() -> ok | {error, Reason}
 %% @end
 %%--------------------------------------------------------------------
 start() -> application:start(irlang).

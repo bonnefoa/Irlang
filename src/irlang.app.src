@@ -1,4 +1,4 @@
-{application, irlang,
+{application, irlang,  
  [
   {description, "Irc bot in erlang"},
   {vsn, "1"},
