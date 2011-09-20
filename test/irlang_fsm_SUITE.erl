@@ -61,4 +61,3 @@ test_disconnect(_Config) ->
   {ok, [ Cmd ]} = gen_fsm:sync_send_event(irlang_bot_fsm, {disconnect, "Graou" } ),
   "QUIT Graou\r\n" = Cmd.
 
-
