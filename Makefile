@@ -15,9 +15,9 @@ console:compile
 test.spec: test.spec.in
 	    cat test.spec.in | sed -e "s,@PATH@,$(PWD)," > $(PWD)/test.spec
 
-ct: test.spec src
+ct: test.spec compile 
 			mkdir -p log
-	    run_test -pa $(PWD)/*/ebin -spec test.spec
+	    run_test -spec test.spec -pa $(PWD)/ebin 
 
 build_plt:
 	dialyzer --build_plt                 \

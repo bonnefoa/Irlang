@@ -1,4 +1,4 @@
 {logdir, "@PATH@/log"}.
 {alias, irlang, "@PATH@"}.
-{suites, irlang, [irlang_SUITE]}.
+{suites, irlang, [irlang_SUITE, irlang_fsm_SUITE]}.
 {include, "@PATH@/include"}.
