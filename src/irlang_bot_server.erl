@@ -39,7 +39,7 @@ init(IrcServer = #irc_server{ }) ->
   Pid = proc_lib:spawn_link(?MODULE, init_listen, [IrcServer]),
   {ok, #bot_server_state{loop_pid=Pid} }.
 
-handle_cast(Msg={send, CmdList}, State=#bot_server_state{loop_pid=Pid}) ->
+handle_cast(Msg={send, _CmdList}, State=#bot_server_state{loop_pid=Pid}) ->
   Pid ! Msg,
   {noreply, State}.
 
