@@ -23,6 +23,8 @@ quit(Reason)                   -> ?WRITE_CMD("QUIT ~s\r\n", [Reason]).
 
 request_to_event(Request) ->
   case Request of
-    "PING " ++ Msg -> {ping, Msg}
+    "PING " ++ Other -> 
+      Msg = string:substr(Other, 1, string:len(Other) - 2 ), 
+      {ping, Msg}
   end.
 

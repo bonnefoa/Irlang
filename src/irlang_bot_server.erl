@@ -66,20 +66,27 @@ send_cmd(ListCommand, Socket) ->
 %% Listen loop
 %% ===================================================================
 
-loop_listen(State = #bot_server_loop{socket=Socket}) ->
+loop_listen(Socket) ->
   ssl:setopts(Socket,[{active,true}]),
   receive
-    {tcp, Socket, Data} ->
-      {ok, CmdList} = gen_fsm:sync_send_event(irlang_bot_fsm, irlang_request:request_to_event(Data) ),
-      send_cmd(CmdList, Socket);
+    {ssl, NewSocket, Data} ->
+      Event = irlang_request:request_to_event(Data),  
+      {ok, CmdList} = gen_fsm:sync_send_event(irlang_bot_fsm, Event ),
+      send_cmd(CmdList, NewSocket),
+      error_logger:error_msg("SENDD"),
+      loop_listen(NewSocket);
     {send, CmdList} ->
-      send_cmd(CmdList, Socket)
-  end,
-  loop_listen(State).
+      error_logger:error_msg("SENDDING ~p~n", [CmdList]),
+      send_cmd(CmdList, Socket),
+      loop_listen(Socket);
+    Other ->
+      error_logger:error_msg("OTHER ~p", [Other]),
+      loop_listen(Socket)
+  end.
 
 init_listen(#irc_server{address=Address, port=Port}) ->
   Params = [ {active, false} ],
   {ok, Socket} = ssl:connect(Address, Port,  Params, 2000),
   ok = ssl:ssl_accept(Socket),
-  loop_listen(#bot_server_loop{socket=Socket} ).
+  loop_listen(Socket).
 

@@ -29,6 +29,7 @@ init(State = #server_state{port=Port} ) ->
     , {active, false}
     , {certfile,"/home/sora/git_repos/irlang/priv/certificate.pem"}
     , {keyfile, "/home/sora/git_repos/irlang/priv/key.pem"}
+    , {keepalive, true}
   ],
   case ssl:listen(Port, Params) of
     {ok, LSocket} ->

@@ -9,7 +9,7 @@
 -include_lib("common_test/include/ct.hrl").
 -include("common_test.hrl").
 
-suite() -> [{timetrap,{minutes,10}}].
+suite() -> [{timetrap,{minutes,1}}].
 init_per_suite(Config) ->
   ssl:start(),
   Config.
@@ -19,22 +19,25 @@ end_per_group(_GroupName, _Config) -> ok.
 groups() -> [].
 
 init_per_testcase(_TestCase, Config) ->
-  Loop = ?config(server_loop, Config),
+  {ok, _MockServer} = mock_server:start_link(#server_state{port=1337, loop={?MODULE, check_ping}, pid=self()}),
   {ok, _Sup} = irlang_app:start(temporary, [1337, "localhost"]),
-  {ok, _MockServer} = mock_server:start_link(#server_state{port=1337, loop={?MODULE, Loop}, pid=self()}),
   Config.
 
 end_per_testcase(_TestCase, _Config) ->
   ok.
 
 all() ->
-    [test_ping].
+    [
+      %test_connect_server
+      test_ping
+    ].
 
 %%------------------------------------------------------------------------------
 %% TEST CASES
 %%------------------------------------------------------------------------------
 
-check_connection({Socket, Pid}) -> try
+check_connection({Socket, Pid}) -> 
+  try
     {ok, "NICK irlang\r\n"} = ssl:recv(Socket, 0, 500),
     {ok, "USER irlang 0 * :irlang\r\n"} = ssl:recv(Socket, 0, 500),
     {ok, "JOIN #geek\r\n"} = ssl:recv(Socket, 0, 500)
@@ -44,9 +47,8 @@ check_connection({Socket, Pid}) -> try
   Pid ! ok,
   ssl:close(Socket) .
 
-test_connect_server() -> [].
-
 test_connect_server(_Config) ->
+  gen_server:call(mock_server, {change_loop, {?MODULE, check_connection} } ),
   ok = irlang_bot_server:join(test_record_join()),
   wait_ok().
 
@@ -55,22 +57,21 @@ test_connect_server(_Config) ->
 %% ===================================================================
 
 check_ping({Socket, Pid}) ->
+  process_flag(trap_exit, true),
   try
     {ok, "NICK irlang\r\n"} = ssl:recv(Socket, 0, 500),
     {ok, "USER irlang 0 * :irlang\r\n"} = ssl:recv(Socket, 0, 500),
     {ok, "JOIN #geek\r\n"} = ssl:recv(Socket, 0, 500),
-    ssl:send(Socket, irlang_request:ping("TOTOLOL")),
-    {ok, "PONG: TOTOLOL\r\n"} = ssl:recv(Socket, 0)
+    ssl:send(Socket, irlang_request:ping("TOTOLOL"))
+    , {ok, "PONG: TOTOLOL\r\n"} = ssl:recv(Socket, 500)
   catch
     _:Reason -> Pid ! Reason
   end,
   Pid ! ok,
   ssl:close(Socket) .
 
-test_ping() ->
-  [{server_loop, check_ping}].
-
 test_ping(_Config) ->
+  ok = gen_server:call(mock_server, {change_loop, {?MODULE, check_ping} } ),
   ok = irlang_bot_server:join(test_record_join()),
   wait_ok().
 
@@ -86,3 +87,4 @@ wait_ok() ->
       io:format("Got Other == ~p", [Other]),
       throw(Other)
   end.
+
