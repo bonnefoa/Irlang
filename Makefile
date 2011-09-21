@@ -1,11 +1,18 @@
 REBAR=`which rebar || ./rebar`
+ERL=erl
+
 all: deps compile
+
 deps:
 	    @$(REBAR) get-deps
+
 compile:
-	    @$(REBAR) compile
+	  mkdir -p ebin 
+		$(ERL) -noinput -eval "case make:all() of up_to_date -> halt(0); _ -> halt(1) end."
+
 eunit:
 	    @$(REBAR) eunit
+
 clean:
 	    @$(REBAR) clean
 
@@ -16,8 +23,8 @@ test.spec: test.spec.in
 	    cat test.spec.in | sed -e "s,@PATH@,$(PWD)," > $(PWD)/test.spec
 
 ct: test.spec compile 
-			mkdir -p log
-	    run_test -spec test.spec -pa $(PWD)/ebin 
+			mkdir -p logs
+	    run_test -spec test.spec -pa $(PWD)/ebin -no_auto_compile -logdir $(PWD)/logs 
 
 build_plt:
 	dialyzer --build_plt                 \

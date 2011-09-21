@@ -9,15 +9,6 @@
 -include_lib("common_test/include/ct.hrl").
 -include("common_test.hrl").
 
--define(WAIT_OK,
-  receive
-    ok -> ok;
-    Other ->
-      io:format("Got Other == ~p", [Other]),
-      throw(Other)
-  end
-).
-
 suite() -> [{timetrap,{minutes,10}}].
 init_per_suite(Config) ->
   ssl:start(),
@@ -28,17 +19,16 @@ end_per_group(_GroupName, _Config) -> ok.
 groups() -> [].
 
 init_per_testcase(_TestCase, Config) ->
+  Loop = ?config(server_loop, Config),
   {ok, _Sup} = irlang_app:start(temporary, [1337, "localhost"]),
-  {ok, _MockServer} = mock_server:start_link(#server_state{port=1337, loop={?MODULE, check_connection}, pid=self()}),
+  {ok, _MockServer} = mock_server:start_link(#server_state{port=1337, loop={?MODULE, Loop}, pid=self()}),
   Config.
 
 end_per_testcase(_TestCase, _Config) ->
-  %exit(whereis(mock_server),"GRA"),
-  %exit(whereis(irlang_sup),"GRA")
   ok.
 
 all() ->
-    [test_connect_server, test_ping].
+    [test_ping].
 
 %%------------------------------------------------------------------------------
 %% TEST CASES
@@ -58,8 +48,7 @@ test_connect_server() -> [].
 
 test_connect_server(_Config) ->
   ok = irlang_bot_server:join(test_record_join()),
-  ?WAIT_OK.
-
+  wait_ok().
 
 %% ===================================================================
 %% Check ping
@@ -78,9 +67,22 @@ check_ping({Socket, Pid}) ->
   Pid ! ok,
   ssl:close(Socket) .
 
-test_ping() -> [].
+test_ping() ->
+  [{server_loop, check_ping}].
 
 test_ping(_Config) ->
   ok = irlang_bot_server:join(test_record_join()),
-  ?WAIT_OK.
+  wait_ok().
 
+
+%% ===================================================================
+%% Private function
+%% ===================================================================
+
+wait_ok() ->
+  receive
+    ok -> ok;
+    Other ->
+      io:format("Got Other == ~p", [Other]),
+      throw(Other)
+  end.
