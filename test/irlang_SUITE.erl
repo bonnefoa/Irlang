@@ -36,7 +36,7 @@ all() ->
 %% TEST CASES
 %%------------------------------------------------------------------------------
 
-check_connection({Socket, Pid}) -> 
+check_connection({Socket, Pid}) ->
   try
     {ok, "NICK irlang\r\n"} = ssl:recv(Socket, 0, 500),
     {ok, "USER irlang 0 * :irlang\r\n"} = ssl:recv(Socket, 0, 500),
@@ -62,8 +62,8 @@ check_ping({Socket, Pid}) ->
     {ok, "NICK irlang\r\n"} = ssl:recv(Socket, 0, 500),
     {ok, "USER irlang 0 * :irlang\r\n"} = ssl:recv(Socket, 0, 500),
     {ok, "JOIN #geek\r\n"} = ssl:recv(Socket, 0, 500),
-    ssl:send(Socket, irlang_request:ping("TOTOLOL"))
-    , {ok, "PONG: TOTOLOL\r\n"} = ssl:recv(Socket, 500)
+    ssl:send(Socket, irlang_request:ping("TOTOLOL")),
+    {ok, "PONG TOTOLOL\r\n"} = ssl:recv(Socket, 0, 500)
   catch
     _:Reason -> Pid ! Reason
   end,
