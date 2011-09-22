@@ -96,5 +96,5 @@ unexpected(Msg, State) ->
 
 unexpected_state(Event, StateName, State) ->
   error_logger:error_msg("Got unexpected event ~p while state is ~p~n", [Event, StateName]),
-  {reply, {ko, "Unexpected request"}, StateName, State}.
+  throw({unexpected_event, Event}).
 

@@ -69,12 +69,17 @@ send_cmd(ListCommand, Socket) ->
 loop_listen(Socket) ->
   ssl:setopts(Socket,[{active,true}]),
   receive
-    {ssl, NewSocket, Data} ->
-      Event = irlang_request:request_to_event(Data),
-      {ok, CmdList} = gen_fsm:sync_send_event(irlang_bot_fsm, Event),
-      send_cmd(CmdList, NewSocket);
+    {ssl, Socket, Data} ->
+      case irlang_request:request_to_event(Data) of
+        {ignore } -> ok;
+        Event ->
+          {ok, CmdList} = gen_fsm:sync_send_event(irlang_bot_fsm, Event),
+          send_cmd(CmdList, Socket)
+      end;
     {send, CmdList} ->
       send_cmd(CmdList, Socket);
+    {ssl_closed, Socket} ->
+      throw(ssl_closed);
     Other ->
       error_logger:error_msg("OTHER ~p", [Other])
   end,
@@ -82,7 +87,7 @@ loop_listen(Socket) ->
 
 init_listen(#irc_server{address=Address, port=Port}) ->
   Params = [ {active, false} ],
-  {ok, Socket} = ssl:connect(Address, Port,  Params, 2000),
+  {ok, Socket} = ssl:connect(Address, Port,  Params, 10000),
   ok = ssl:ssl_accept(Socket),
   loop_listen(Socket).
 

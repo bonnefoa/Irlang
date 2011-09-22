@@ -24,14 +24,13 @@ start_link(StartArgs) ->
 %% ===================================================================
 
 init(Server) ->
-  RestartStrategy    = one_for_one,
+  RestartStrategy    = one_for_all,
   MaxRestarts        = 1,
   MaxTimeBetRestarts = 3600,
   SupFlags = {RestartStrategy, MaxRestarts, MaxTimeBetRestarts},
   ChildSpecs = [
     ?CHILD_ARGS(irlang_bot_server, worker, [Server])
     , ?CHILD(irlang_bot_fsm, worker)
-
   ],
   {ok,{SupFlags, ChildSpecs}}.
 

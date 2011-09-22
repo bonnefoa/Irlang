@@ -23,8 +23,11 @@ quit(Reason)                   -> ?WRITE_CMD("QUIT ~s\r\n", [Reason]).
 
 request_to_event(Request) ->
   case Request of
-    "PING " ++ Other -> 
-      Msg = string:substr(Other, 1, string:len(Other) - 2 ), 
-      {ping, Msg}
+    "PING " ++ Other ->
+      Msg = string:substr(Other, 1, string:len(Other) - 2 ),
+      {ping, Msg};
+    Other ->
+      error_logger:warning_msg("Got unexpected Request ~p~n", [Other]),
+      {ignore}
   end.
 
