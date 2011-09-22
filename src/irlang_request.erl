@@ -21,11 +21,28 @@ join(Channel)                  -> ?WRITE_CMD("JOIN ~s\r\n", [Channel]).
 private_message(User, Message) -> ?WRITE_CMD("PRIVMSG ~s ~s\r\n", [User, Message]).
 quit(Reason)                   -> ?WRITE_CMD("QUIT ~s\r\n", [Reason]).
 
+
+%% ===================================================================
+%% @doc Remove ending \r\n in the message
+%% @end 
+%% ===================================================================
+
+remove_end_chars(Str) -> 
+  string:substr(Str, 1, string:len(Str) - 2 ). 
+
+extract_pseudo(From) -> 
+  string:substr(From, 2, string:chr(From, $!) - 2 ).
+
 request_to_event(Request) ->
-  case Request of
-    "PING " ++ Other ->
-      Msg = string:substr(Other, 1, string:len(Other) - 2 ),
+  SplittedRequest = string:tokens(Request, " "), 
+  case SplittedRequest of
+    ["PING", MsgRaw] ->
+      Msg = remove_end_chars(MsgRaw),
       {ping, Msg};
+    [FromRaw | [ "PRIVMSG" | [ Channel | MsgRaw ] ] ] -> 
+      From = extract_pseudo(FromRaw),
+      Msg = remove_end_chars(string:join(MsgRaw, " ")),
+      {priv_msg, #msg{from=From, channel=Channel, message=Msg} } ;
     Other ->
       error_logger:warning_msg("Got unexpected Request ~p~n", [Other]),
       {ignore}

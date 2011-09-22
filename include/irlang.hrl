@@ -17,4 +17,9 @@
     socket
   } ).
 
+-record(msg, {
+  from,
+  channel,
+  message
+  }).
 
