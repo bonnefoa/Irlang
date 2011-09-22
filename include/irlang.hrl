@@ -11,6 +11,9 @@
 
 -record(bot_server_state, { 
     loop_pid
+    , nick
+    , channel
+    , pv
   } ).
 
 -record(bot_server_loop, { 

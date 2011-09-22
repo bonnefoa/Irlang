@@ -8,6 +8,8 @@
 
 -behaviour(gen_fsm).
 
+-define(BASE_PV, 3).
+
 %% API
 -export([start/0, start_link/0]).
 
@@ -43,7 +45,7 @@ init(_Args) ->
 
 idle({join, #join{ channel=Channel, nick=Nick, real_name=RealName } } , _From, State) ->
   Reply = {ok, [ irlang_request:nick(Nick), irlang_request:user(Nick, RealName), irlang_request:join(Channel) ]},
-  {reply, Reply, joined, State };
+  {reply, Reply, joined, State#bot_server_state{nick=Nick, channel=Channel, pv=?BASE_PV} };
 
 idle(Event, _From, State) ->
   unexpected_state(Event, idle, State).
@@ -52,6 +54,10 @@ idle(Event, _From, State) ->
 %% Joined state
 %% ===================================================================
 
+joined(_Event, _From, State = #bot_server_state{channel=Channel, pv=0}) ->
+  Reply = {ok, [ irlang_request:message(Channel, "You are ugly and stupid!") ]},
+  {stop, he_mad, Reply, State};
+
 joined({disconnect, Reason}, _From, State) ->
   Reply = {ok, [ irlang_request:quit(Reason) ]},
   {reply, Reply, joined, State };
@@ -59,6 +65,16 @@ joined({disconnect, Reason}, _From, State) ->
 joined({ping, Msg}, _From, State) ->
   Reply = {ok, [ irlang_request:pong(Msg) ]},
   {reply, Reply, joined, State };
+
+joined({priv_msg, #msg{message=Msg} }, _From, State = #bot_server_state{channel=Channel, pv=Pv, nick=Nick} ) ->
+  case irlang_request:is_message_addressed_to(Msg, Nick) of
+    true ->
+      ChannelReply = lists:flatten(io_lib:format("You mad? (~w pv left)", [Pv] )),
+      Reply = {ok, [ irlang_request:message(Channel, ChannelReply) ] },
+      {reply, Reply, joined, State#bot_server_state{pv=Pv-1} };
+    false ->
+      {reply, {ok, []}, joined, State }
+  end;
 
 joined(Event, _From, State) ->
   unexpected_state(Event, joined, State).

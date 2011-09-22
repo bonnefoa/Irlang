@@ -25,7 +25,7 @@ start_link(StartArgs) ->
 
 init(Server) ->
   RestartStrategy    = one_for_all,
-  MaxRestarts        = 1,
+  MaxRestarts        = 2,
   MaxTimeBetRestarts = 3600,
   SupFlags = {RestartStrategy, MaxRestarts, MaxTimeBetRestarts},
   ChildSpecs = [

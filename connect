@@ -1,0 +1,2 @@
+ssl:start(), rr("include/*"), irlang_app:start(), irlang_bot_server:join(#join{ channel="#geek", nick="irlang", real_name="irlang" }).
+
