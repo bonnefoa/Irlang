@@ -20,9 +20,7 @@ init_per_testcase(_TestCase, Config) ->
   {ok, _Pid} = mock_server:start(#server_state{port=1337, loop={?MODULE, dummy_loop}}),
   Config.
 
-end_per_testcase(_TestCase, _Config) ->
-  exit(whereis(mock_server),"Pang"),
-  ok.
+end_per_testcase(_TestCase, _Config) -> ok.
 
 all() ->
     [test_mock_server].
